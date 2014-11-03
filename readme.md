@@ -1,5 +1,7 @@
 Seros ARS-Regendi Rating System
 ===============================
+Warning: This Script may be unfunctional since the newest design change!
+
 
 This script is used for getting the rating of states.
 
