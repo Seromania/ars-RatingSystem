@@ -1,8 +1,7 @@
 # -*- coding: cp1252 -*-
-import urllib2
 import StringIO
-import lxml.html as lh
 import codecs
+from arsapi import SeroARSAPI
 
 class SerosRating(object):
     """SerosRating for Ars-Regendi"""
@@ -32,96 +31,40 @@ class SerosRating(object):
         print ("====NEW STATE====")
         print ("Current State: %s \n" % id)
 
-        response = urllib2.urlopen("http://de.ars-regendi.com/state/%s/haushalt.html" % id)
-        line = ""
-        content = response.read()
-        tree = lh.fromstring(content)
-        for key, status in zip(*[iter(tree.xpath('//td/text()'))]*2):
-            if status.split(" ")[0] == "Durchschnittsstaat":
-               #print("Key: %s || Status: %s " % (key, status))
-               Staatsname = key
-            if key == "Gesamtes Staatseinkommen":
-                #print("Key: %s || Status: %s " % (key, status.replace('.','').replace(',','.')))
-                Staatseinkommen = status.split()[0].replace('.','').replace(',','.')
-            if key == "Staatsschulden":
-                #print("Key: %s || Status: %s " % (key, status.replace('.','').replace(',','.')))
-                Staatsschulden = status.split()[0].replace('.','').replace(',','.')
-            if key == "Neuverschuldung":
-               # print("Key: %s || Status: %s " % (key, status.replace('.','').replace(',','.')))
-                Neuverschuldung= status.split()[0].replace('.','').replace(',','.')
-            if key == "Zinszahlungen":
-                #print("Key: %s || Status: %s " % (key, status.replace('.','').replace(',','.')))
-                Zinszahlungen = status.split()[0].replace('.','').replace(',','.')
+        dataapi = SeroARSAPI(id)
         
-        response = urllib2.urlopen("http://de.ars-regendi.com/state/%s/regent.html" % id)
-        line = ""
-        content = response.read()
-        tree = lh.fromstring(content)
-        for key, status in zip(*[iter(tree.xpath('//td/text()'))]*2):
-            if key == "Beliebtheit":
-                #print("Key: %s || Status: %s " % (key, status))
-                Beliebtheit = status
-            if key == "Weltruf":
-                print("Key: %s || Status: %s " % (key, status))
-                Weltruf = status
-            if key == "Einfluss":
-                #print("Key: %s || Status: %s " % (key, status))
-                Einfluss = status
-            if key == "Wahlen":
-                #print("Key: %s || Status: %s " % (key, status.split("/")[1]))
-                Wahlen = status.split("/")[1]
+        Staatsname = dataapi.getData("Statesname")
+        Staatseinkommen = dataapi.getData("Total state income")
+        Staatsschulden = dataapi.getData("National debt")
+        Neuverschuldung= dataapi.getData("New indebtedness")
+        Zinszahlungen = dataapi.getData("Payment of interest")
+        Beliebtheit = dataapi.getData("Popularity-Regent")
+        Weltruf = dataapi.getData("Int. reputation-Regent")
+        Einfluss = dataapi.getData("Influence-Regent")
+        Wahlen = dataapi.getData("Elections-Regent")
+        BIP = dataapi.getData("Gross domestic product")
+        Wirtschaft = dataapi.getData("Economy growth")
+        Staatenklasse = dataapi.getData("Staatenklasse")
 
-        response = urllib2.urlopen("http://de.ars-regendi.com/state/%s/detail6.html" % id)
-        line = ""
-        content = response.read()
-        tree = lh.fromstring(content)
-        for key, status in zip(*[iter(tree.xpath('//td/text()'))]*2):
-            if key == "Bruttoinlandsprodukt":
-                #print("Key: %s || Status: %s " % (key, status.split()[-3].replace('.','').replace(',','.')))
-                BIP = status.split()[-3].replace('.','').replace(',','.')
-            if key == "Wirtschaft Vorjahr":
-                #print("Key: %s || Status: %s " % (key, status.split()[-2].replace('.','').replace(',','.')))
-                Wirtschaft = status.split()[-2].replace('.','').replace(',','.')
-            
-        response = urllib2.urlopen("http://de.ars-regendi.com/state/%s/show.html" % id)
-        line = ""
-        content = response.read()
-        tree = lh.fromstring(content)
-                
-        for key in zip(*[iter(tree.xpath('//p/text()'))]*1):
-            #print("Key: %s" % key)
-            tempstr = str(key)
-            if tempstr.find("eingestufte") != -1:
-                #print("key: %s" % tempstr)
-                staatbesch = tempstr.split()
-                #print(staatenklasse)
-                count = 0
-                for i in staatbesch:
-                    if i == "eingestufte":
-                        #print("Gefunden: %s" % count)
-                        #print("Staatenklasse: %s" % staatenklasse[count-1])
-                        Staatenklasse = staatbesch[count-1]
-                    else:
-                        count += 1
                 
             
         Rf = (float(Beliebtheit) + float(Einfluss)) * (float(Wahlen.split("%")[0]) / 100)
 
-        print("       Staatsname: %s" % Staatsname)
-        print("    Staatenklasse: %s" % Staatenklasse)
-        print("               Rf: %s" % Rf)
-        print("              BIP: %s" % BIP)
-        print(" vorj. Wirtschaft: %s" % Wirtschaft)
-        print("  Staatseinkommen: %s" % Staatseinkommen)
-        print("   Staatsschulden: %s" % Staatsschulden)
-        print("  Neuverschuldung: %s" % Neuverschuldung)
-        print("    Zinszahlungen: %s" % Zinszahlungen)
+        #print("       Staatsname: %s" % Staatsname)
+        #print("    Staatenklasse: %s" % Staatenklasse)
+        #print("               Rf: %s" % Rf)
+        #print("              BIP: %s" % BIP)
+        #print(" vorj. Wirtschaft: %s" % Wirtschaft)
+        #print("  Staatseinkommen: %s" % Staatseinkommen)
+        #print("   Staatsschulden: %s" % Staatsschulden)
+        #print("  Neuverschuldung: %s" % Neuverschuldung)
+        #print("    Zinszahlungen: %s" % Zinszahlungen)
         
         if float(Weltruf) < 0:
             Wruf = -float(Rf);
         if float(Weltruf) >= 0:
             Wruf = Weltruf     
-        print("             Wruf: %s" % Wruf)
+        #print("             Wruf: %s" % Wruf)
 
         STf = float(Rf) + float(Wruf)
 
@@ -129,14 +72,14 @@ class SerosRating(object):
             STf = float(STf) - (int(STf) - 1)
         if float(STf) < 0:
             STf = 0
-        print("             STf: %s\n" % STf)
+        #print("             STf: %s\n" % STf)
 
         X1 = float(Staatsschulden) / float(BIP) * 100
         X2 = float(Neuverschuldung) / float(BIP) * 100
         X3 = float(Zinszahlungen) / float(Staatseinkommen) * 100
         
 
-        print("X1: %s || X2: %s || X3: %s" % (X1, X2, X3))
+        #print("X1: %s || X2: %s || X3: %s" % (X1, X2, X3))
 
         if X1 < -150:
             X1 = 0
@@ -266,19 +209,19 @@ class SerosRating(object):
                 X4 = -1
 
 
-        print("            X4: %s" % X4)
+        #print("            X4: %s" % X4)
      
-        print("X1: %s || X2: %s || X3: %s || X4: %s" % (X1, X2, X3, X4))
+        #print("X1: %s || X2: %s || X3: %s || X4: %s" % (X1, X2, X3, X4))
 
         RatingPunkte = X1 + X2 + X3 + X4 + STf
-        print("\n   Ratingpunkte: %s" % RatingPunkte)
+        #print("\n   Ratingpunkte: %s" % RatingPunkte)
         if str(Staatenklasse) == "Supermacht" or str(Staatenklasse) == "Industriemacht":
             RatingPunkte += 3
         elif str(Staatenklasse) == "Rohstoffmacht":
             RatingPunkte += 1
         elif str(Staatenklasse) == "postkommunistisch" or str(Staatenklasse) == "fundamentalistisch" or str(Staatenklasse) == "Entwicklungsland":
             RatingPunkte -= 1
-        print("   Ratingpunkte: %s" % RatingPunkte)
+        #print("   Ratingpunkte: %s" % RatingPunkte)
 
         Vorzeichenliste = []
         Vorzeichenliste.append(X1)
@@ -296,7 +239,7 @@ class SerosRating(object):
             else:
                 Vorzeichen = "-"
 
-        print("     Vorzeichen: %s" % Vorzeichen)
+        #print("     Vorzeichen: %s" % Vorzeichen)
         """
         Rating Tabelle:
         AAA: 15 - 16
@@ -334,7 +277,7 @@ class SerosRating(object):
             Rating = "D"
         if Rating == "AAA" or Rating == "D":
             Vorzeichen = ""
-        print("         Rating: %s%s" % (Rating,Vorzeichen))
+        #print("         Rating: %s%s" % (Rating,Vorzeichen))
 
         file = codecs.open('rating.csv', 'a+', 'iso-8859-15')
         file.write("%s;%s%s\n" % (Staatsname, Rating, Vorzeichen))
@@ -346,5 +289,4 @@ if __name__ == "__main__":
     SR = SerosRating()
     SR.getCountryIDs("states.txt")
     SR.GetCountryRates()
-    #SR.getHTML(137078)
-    #hier kommt noch was
+    
